@@ -1,0 +1,20 @@
+{
+  "Page": {
+    "document_updated_at": "This document was last updated on {date}."
+  },
+  "Footer": {
+    "all_rights_reserved": "All rights reserved"
+  },
+  "Categories": {
+    "title": "Categories"
+  },
+  "Errors": {
+    "undefined": "There was an issue with our storefront. This could be a temporary issue, please try your action again."
+  },
+  "Messages": {
+    "oh_no": "Oh no!"
+  },
+  "Base": {
+    "try_again": "Try Again"
+  }
+}

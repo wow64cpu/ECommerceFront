@@ -1,5 +1,7 @@
+const withNextIntl = require('next-intl/plugin')('./i18n.ts');
+
 /** @type {import('next').NextConfig} */
-module.exports = {
+const nextConfig = {
   eslint: {
     // Disabling on production builds because we're running checks on PRs via GitHub Actions.
     ignoreDuringBuilds: true
@@ -8,9 +10,9 @@ module.exports = {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'cdn.shopify.com',
-        pathname: '/s/files/**'
+        protocol: process.env.REMOTE_PATTERN_PROTOCOL,
+        hostname: process.env.REMOTE_PATTERN_HOST,
+        pathname: process.env.REMOTE_PATTERN_PATH
       }
     ]
   },
@@ -24,3 +26,5 @@ module.exports = {
     ];
   }
 };
+
+module.exports = withNextIntl(nextConfig);

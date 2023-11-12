@@ -1,12 +1,15 @@
 import clsx from 'clsx';
 import { Suspense } from 'react';
 
-import { getCollections } from 'lib/shopify';
 import FilterList from './filter';
+import { useLocale, useTranslations } from 'next-intl';
+import { getCategories } from '../../../lib/strapi';
 
-async function CollectionList() {
-  const collections = await getCollections();
-  return <FilterList list={collections} title="Collections" />;
+async function CollectionList({ title }: { title: string }) {
+  const locale = useLocale();
+  const categories = await getCategories(locale);
+
+  return <FilterList list={categories} title={title} />;
 }
 
 const skeleton = 'mb-3 h-4 w-5/6 animate-pulse rounded';
@@ -14,6 +17,8 @@ const activeAndTitles = 'bg-neutral-800 dark:bg-neutral-300';
 const items = 'bg-neutral-400 dark:bg-neutral-700';
 
 export default function Collections() {
+  const t = useTranslations('Categories');
+
   return (
     <Suspense
       fallback={
@@ -31,7 +36,7 @@ export default function Collections() {
         </div>
       }
     >
-      <CollectionList />
+      <CollectionList title={t('title')} />
     </Suspense>
   );
 }
