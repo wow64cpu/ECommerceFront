@@ -6,8 +6,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Fragment, useEffect, useState } from 'react';
 
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Menu } from 'lib/shopify/types';
 import Search from './search';
+import { Menu } from '../../../lib/strapi/types';
 
 export default function MobileMenu({ menu }: { menu: Menu[] }) {
   const pathname = usePathname();
@@ -79,7 +79,7 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
                     {menu.map((item: Menu) => (
                       <li
                         className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white"
-                        key={item.title}
+                        key={item.path}
                       >
                         <Link href={item.path} onClick={closeMobileMenu}>
                           {item.title}

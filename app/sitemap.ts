@@ -1,15 +1,19 @@
-import { getCollections, getPages, getProducts } from 'lib/shopify';
-import { validateEnvironmentVariables } from 'lib/utils';
+import { ensureStartsWith, validateEnvironmentVariables } from 'lib/utils';
 import { MetadataRoute } from 'next';
+import { getCategories, getProducts } from '../lib/strapi';
+import { defaultLocale, locales } from '../i18n.config';
+import * as process from 'process';
 
 type Route = {
   url: string;
   lastModified: string;
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  : 'http://localhost:3000';
+const { STORE_DOMAIN, PORT = 3000 } = process.env;
+
+const baseUrl = STORE_DOMAIN
+  ? ensureStartsWith(STORE_DOMAIN, 'https://')
+  : `http://localhost:${PORT}`;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   validateEnvironmentVariables();
@@ -19,31 +23,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date().toISOString()
   }));
 
-  const collectionsPromise = getCollections().then((collections) =>
-    collections.map((collection) => ({
-      url: `${baseUrl}${collection.path}`,
-      lastModified: collection.updatedAt
-    }))
-  );
+  const categoriesPromise = getCategories(defaultLocale).then((categories) => {
+    return categories.map((category) =>
+      locales.map((locale) => ({
+        url: `${baseUrl}/${locale}/search/${category.handle}`,
+        lastModified: category.updatedAt
+      }))
+    );
+  });
 
-  const productsPromise = getProducts({}).then((products) =>
-    products.map((product) => ({
-      url: `${baseUrl}/product/${product.handle}`,
-      lastModified: product.updatedAt
-    }))
-  );
+  const productsPromise = getProducts(defaultLocale).then((products) => {
+    return products.map((product) =>
+      locales.map((locale) => ({
+        url: `${baseUrl}/${locale}/${product.handle}`,
+        lastModified: product.updatedAt
+      }))
+    );
+  });
 
-  const pagesPromise = getPages().then((pages) =>
-    pages.map((page) => ({
-      url: `${baseUrl}/${page.handle}`,
-      lastModified: page.updatedAt
-    }))
-  );
+  // TODO pages
+  // const pagesPromise = getPages().then((pages) =>
+  //   pages.map((page) => ({
+  //     url: `${baseUrl}/${page.handle}`,
+  //     lastModified: page.updatedAt
+  //   }))
+  // );
 
   let fetchedRoutes: Route[] = [];
 
   try {
-    fetchedRoutes = (await Promise.all([collectionsPromise, productsPromise, pagesPromise])).flat();
+    fetchedRoutes = (
+      await Promise.all([
+        categoriesPromise,
+        // collectionsPromise,
+        productsPromise
+        // pagesPromise
+      ])
+    ).flat(2);
   } catch (error) {
     throw JSON.stringify(error, null, 2);
   }

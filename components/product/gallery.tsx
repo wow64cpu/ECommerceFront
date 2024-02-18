@@ -6,21 +6,33 @@ import { createUrl } from 'lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { Product } from '../../lib/strapi/types';
+import clsx from 'clsx';
 
-export function Gallery({ images }: { images: { src: string; altText: string }[] }) {
+export function Gallery({ product }: { product: Product }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const variantSearchParam = searchParams.get('variant');
   const imageSearchParam = searchParams.get('image');
   const imageIndex = imageSearchParam ? parseInt(imageSearchParam) : 0;
+  const variantIndex = variantSearchParam ? parseInt(variantSearchParam) : 0;
+
+  const variant = product.variants[variantIndex];
+
+  if (!variant) return null;
+
+  const images = variant.images;
 
   const nextSearchParams = new URLSearchParams(searchParams.toString());
   const nextImageIndex = imageIndex + 1 < images.length ? imageIndex + 1 : 0;
   nextSearchParams.set('image', nextImageIndex.toString());
+  nextSearchParams.set('variant', variantIndex.toString());
   const nextUrl = createUrl(pathname, nextSearchParams);
 
   const previousSearchParams = new URLSearchParams(searchParams.toString());
   const previousImageIndex = imageIndex === 0 ? images.length - 1 : imageIndex - 1;
   previousSearchParams.set('image', previousImageIndex.toString());
+  previousSearchParams.set('variant', variantIndex.toString());
   const previousUrl = createUrl(pathname, previousSearchParams);
 
   const buttonClassName =
@@ -29,13 +41,13 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
   return (
     <>
       <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden">
-        {images[imageIndex] && (
+        {variant.images[imageIndex] && (
           <Image
             className="h-full w-full object-contain"
             fill
             sizes="(min-width: 1024px) 66vw, 100vw"
-            alt={images[imageIndex]?.altText as string}
-            src={images[imageIndex]?.src as string}
+            alt={variant.images[imageIndex]?.alternativeText as string}
+            src={variant.images[imageIndex]?.url as string}
             priority={true}
           />
         )}
@@ -65,29 +77,49 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
         ) : null}
       </div>
 
-      {images.length > 1 ? (
+      {product.variants.length > 1 ? (
         <ul className="my-12 flex items-center justify-center gap-2 overflow-auto py-1 lg:mb-0">
-          {images.map((image, index) => {
-            const isActive = index === imageIndex;
-            const imageSearchParams = new URLSearchParams(searchParams.toString());
+          {product.variants.map((variant, index) => {
+            const image = variant.images[0];
 
-            imageSearchParams.set('image', index.toString());
+            if (!image) return null;
+
+            const isActive = index === variantIndex;
+            const variantSearchParams = new URLSearchParams(searchParams.toString());
+
+            variantSearchParams.set('image', '0');
+            variantSearchParams.set('variant', index.toString());
 
             return (
-              <li key={image.src} className="h-20 w-20">
+              <li key={image.url} className="h-10 w-10">
                 <Link
                   aria-label="Enlarge product image"
-                  href={createUrl(pathname, imageSearchParams)}
+                  href={createUrl(pathname, variantSearchParams)}
                   scroll={false}
                   className="h-full w-full"
                 >
-                  <GridTileImage
-                    alt={image.altText}
-                    src={image.src}
-                    width={80}
-                    height={80}
-                    active={isActive}
-                  />
+                  {variant.pictogram.image ? (
+                    <GridTileImage
+                      alt={variant.pictogram.image.alternativeText}
+                      src={variant.pictogram.image.url}
+                      width={80}
+                      height={80}
+                      active={isActive}
+                    />
+                  ) : (
+                    <div
+                      className={clsx(
+                        'group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border bg-white hover:border-blue-600 dark:bg-black',
+                        {
+                          'border-2 border-blue-600': isActive,
+                          'border-neutral-200 dark:border-neutral-800': !isActive
+                        }
+                      )}
+                      style={{
+                        backgroundColor: variant.pictogram.color
+                      }}
+                    />
+                  )}
                 </Link>
               </li>
             );

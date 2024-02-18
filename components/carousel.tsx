@@ -1,10 +1,12 @@
-import { getCollectionProducts } from 'lib/shopify';
 import Link from 'next/link';
 import { GridTileImage } from './grid/tile';
+import { getProducts } from '../lib/strapi';
+import { useLocale } from 'next-intl';
 
 export async function Carousel() {
-  // Collections that start with `hidden-*` are hidden from the search page.
-  const products = await getCollectionProducts({ collection: 'hidden-homepage-carousel' });
+  const locale = useLocale();
+
+  const products = await getProducts(locale);
 
   if (!products?.length) return null;
 
@@ -20,17 +22,21 @@ export async function Carousel() {
             className="relative aspect-square h-[30vh] max-h-[275px] w-2/3 max-w-[475px] flex-none md:w-1/3"
           >
             <Link href={`/product/${product.handle}`} className="relative h-full w-full">
-              <GridTileImage
-                alt={product.title}
-                label={{
-                  title: product.title,
-                  amount: product.priceRange.maxVariantPrice.amount,
-                  currencyCode: product.priceRange.maxVariantPrice.currencyCode
-                }}
-                src={product.featuredImage?.url}
-                fill
-                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-              />
+              {product.variants.length > 0 &&
+                product.variants[0] !== undefined &&
+                product.variants[0].images[0] !== undefined && (
+                  <GridTileImage
+                    alt={product.title}
+                    label={{
+                      title: product.title,
+                      amount: product.variants[0].price.amount.toString(),
+                      currencyCode: product.variants[0].price.currency.toString()
+                    }}
+                    src={product.variants[0].images[0].url}
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                  />
+                )}
             </Link>
           </li>
         ))}

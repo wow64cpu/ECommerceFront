@@ -1,21 +1,22 @@
 import { SortFilterItem } from 'lib/constants';
 import FilterItemDropdown from './dropdown';
 import { FilterItem } from './item';
+import { Category } from '../../../../lib/strapi/types';
 
 export type ListItem = SortFilterItem | PathFilterItem;
 export type PathFilterItem = { title: string; path: string };
 
-function FilterItemList({ list }: { list: ListItem[] }) {
+function FilterItemList({ list }: { list: Category[] }) {
   return (
     <>
-      {list.map((item: ListItem, i) => (
+      {list.map((item: Category, i) => (
         <FilterItem key={i} item={item} />
       ))}
     </>
   );
 }
 
-export default function FilterList({ list, title }: { list: ListItem[]; title?: string }) {
+export default function FilterList({ list, title }: { list: Category[]; title?: string }) {
   return (
     <>
       <nav>
